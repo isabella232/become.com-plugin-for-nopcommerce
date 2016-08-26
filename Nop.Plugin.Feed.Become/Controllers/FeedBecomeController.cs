@@ -15,37 +15,53 @@ namespace Nop.Plugin.Feed.Become.Controllers
     [AdminAuthorize]
     public class FeedBecomeController : BasePluginController
     {
+        #region Fields
+
         private readonly ICurrencyService _currencyService;
         private readonly ILocalizationService _localizationService;
         private readonly IPluginFinder _pluginFinder;
         private readonly ILogger _logger;
         private readonly IWebHelper _webHelper;
-        private readonly BecomeSettings _becomeSettings;
         private readonly ISettingService _settingService;
         private readonly IStoreContext _storeContext;
+        private readonly BecomeSettings _becomeSettings;
+
+        #endregion
+
+        #region Ctor
 
         public FeedBecomeController(ICurrencyService currencyService,
-            ILocalizationService localizationService, IPluginFinder pluginFinder, 
-            ILogger logger, IWebHelper webHelper,
-            BecomeSettings becomeSettings, ISettingService settingService,
-            IStoreContext storeContext)
+            ILocalizationService localizationService, 
+            IPluginFinder pluginFinder, 
+            ILogger logger, 
+            IWebHelper webHelper,
+            ISettingService settingService,
+            IStoreContext storeContext,
+            BecomeSettings becomeSettings)
         {
             this._currencyService = currencyService;
             this._localizationService = localizationService;
             this._pluginFinder = pluginFinder;
             this._logger = logger;
             this._webHelper = webHelper;
-            this._becomeSettings = becomeSettings;
             this._settingService = settingService;
             this._storeContext = storeContext;
+            this._becomeSettings = becomeSettings;
         }
+
+        #endregion
+
+        #region Methods
 
         [ChildActionOnly]
         public ActionResult Configure()
         {
-            var model = new FeedBecomeModel();
-            model.ProductPictureSize = _becomeSettings.ProductPictureSize;
-            model.CurrencyId = _becomeSettings.CurrencyId;
+            var model = new FeedBecomeModel
+            {
+                ProductPictureSize = _becomeSettings.ProductPictureSize,
+                CurrencyId = _becomeSettings.CurrencyId
+            };
+
             foreach (var c in _currencyService.GetAllCurrencies(false))
             {
                 model.AvailableCurrencies.Add(new SelectListItem()
@@ -71,7 +87,10 @@ namespace Nop.Plugin.Feed.Become.Controllers
             //save settings
             _becomeSettings.ProductPictureSize = model.ProductPictureSize;
             _becomeSettings.CurrencyId = model.CurrencyId;
+
             _settingService.SaveSetting(_becomeSettings);
+
+            SuccessNotification(_localizationService.GetResource("Admin.Plugins.Saved"));
 
             //redisplay the form
             foreach (var c in _currencyService.GetAllCurrencies(false))
@@ -82,6 +101,7 @@ namespace Nop.Plugin.Feed.Become.Controllers
                     Value = c.Id.ToString()
                 });
             }
+
             return View("~/Plugins/Feed.Become/Views/FeedBecome/Configure.cshtml", model);
         }
 
@@ -95,19 +115,21 @@ namespace Nop.Plugin.Feed.Become.Controllers
                 return Configure();
             }
 
-
             try
             {
                 string fileName = string.Format("become_{0}_{1}.csv", DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), CommonHelper.GenerateRandomDigitCode(4));
-                string filePath = System.IO.Path.Combine(Request.PhysicalApplicationPath, "content\\files\\exportimport", fileName);
+                string filePath = Path.Combine(Request.PhysicalApplicationPath, "content\\files\\exportimport", fileName);
+
                 using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
                 {
                     var pluginDescriptor = _pluginFinder.GetPluginDescriptorBySystemName("PromotionFeed.Become");
+
                     if (pluginDescriptor == null)
                         throw new Exception("Cannot load the plugin");
 
                     //plugin
                     var plugin = pluginDescriptor.Instance() as BecomeService;
+
                     if (plugin == null)
                         throw new Exception("Cannot load the plugin");
 
@@ -116,6 +138,7 @@ namespace Nop.Plugin.Feed.Become.Controllers
 
                 string clickhereStr = string.Format("<a href=\"{0}content/files/exportimport/{1}\" target=\"_blank\">{2}</a>", _webHelper.GetStoreLocation(false), fileName, _localizationService.GetResource("Plugins.Feed.Become.ClickHere"));
                 string result = string.Format(_localizationService.GetResource("Plugins.Feed.Become.SuccessResult"), clickhereStr);
+
                 model.GenerateFeedResult = result;
             }
             catch (Exception exc)
@@ -123,7 +146,6 @@ namespace Nop.Plugin.Feed.Become.Controllers
                 model.GenerateFeedResult = exc.Message;
                 _logger.Error(exc.Message, exc);
             }
-
 
             foreach (var c in _currencyService.GetAllCurrencies(false))
             {
@@ -133,7 +155,10 @@ namespace Nop.Plugin.Feed.Become.Controllers
                     Value = c.Id.ToString()
                 });
             }
+
             return View("~/Plugins/Feed.Become/Views/FeedBecome/Configure.cshtml", model);
         }
+
+        #endregion
     }
 }

@@ -39,10 +39,13 @@ namespace Nop.Plugin.Feed.Become
         #region Ctor
         public BecomeService(IProductService productService,
             ICategoryService categoryService, 
-            IManufacturerService manufacturerService, IPictureService pictureService,
-            ICurrencyService currencyService, IWebHelper webHelper,
+            IManufacturerService manufacturerService, 
+            IPictureService pictureService,
+            ICurrencyService currencyService, 
+            IWebHelper webHelper,
             ISettingService settingService,
-            BecomeSettings becomeSettings, CurrencySettings currencySettings)
+            BecomeSettings becomeSettings, 
+            CurrencySettings currencySettings)
         {
             this._productService = productService;
             this._categoryService = categoryService;
@@ -59,11 +62,13 @@ namespace Nop.Plugin.Feed.Become
 
         #region Utilities
 
-        private Nop.Core.Domain.Directory.Currency GetUsedCurrency()
+        private Currency GetUsedCurrency()
         {
             var currency = _currencyService.GetCurrencyById(_becomeSettings.CurrencyId);
+
             if (currency == null || !currency.Published)
                 currency = _currencyService.GetCurrencyById(_currencySettings.PrimaryStoreCurrencyId);
+
             return currency;
         }
 
@@ -72,9 +77,8 @@ namespace Nop.Plugin.Feed.Become
             if (String.IsNullOrEmpty(s))
                 return s;
 
-            s = s.Replace(';', ',');
-            s = s.Replace('\r', ' ');
-            s = s.Replace('\n', ' ');
+            s = s.Replace(';', ',').Replace('\r', ' ').Replace('\n', ' ');
+
             return s;
         }
 
@@ -85,14 +89,17 @@ namespace Nop.Plugin.Feed.Become
 
             var breadCrumb = new List<Category>();
 
-            while (category != null && //category is not null
-                !category.Deleted && //category is not deleted
-                category.Published) //category is published
+            while (category != null //category is not null
+                && !category.Deleted //category is not deleted
+                && category.Published) //category is published
             {
                 breadCrumb.Add(category);
+
                 category = _categoryService.GetCategoryById(category.ParentCategoryId);
             }
+
             breadCrumb.Reverse();
+
             return breadCrumb;
         }
 
@@ -130,12 +137,12 @@ namespace Nop.Plugin.Feed.Become
             {
                 writer.WriteLine("UPC;Mfr Part #;Manufacturer;Product URL;Image URL;Product Title;Product Description;Category;Price;Condition;Stock Status");
 
-                var products1 = _productService.SearchProducts(storeId: store.Id,
-                visibleIndividuallyOnly: true);
+                var products1 = _productService.SearchProducts(storeId: store.Id, visibleIndividuallyOnly: true);
+
                 foreach (var product1 in products1)
                 {
-                    
                     var productsToProcess = new List<Product>();
+
                     switch (product1.ProductType)
                     {
                         case ProductType.SimpleProduct:
@@ -171,10 +178,9 @@ namespace Nop.Plugin.Feed.Become
                         var pictures = _pictureService.GetPicturesByProductId(product.Id, 1);
 
                         //always use HTTP when getting image URL
-                        if (pictures.Count > 0)
-                            imageUrl = _pictureService.GetPictureUrl(pictures[0], _becomeSettings.ProductPictureSize, storeLocation: store.Url);
-                        else
-                            imageUrl = _pictureService.GetDefaultPictureUrl(_becomeSettings.ProductPictureSize, storeLocation: store.Url);
+                        imageUrl = pictures.Count > 0 
+                            ? _pictureService.GetPictureUrl(pictures[0], _becomeSettings.ProductPictureSize, storeLocation: store.Url) 
+                            : _pictureService.GetDefaultPictureUrl(_becomeSettings.ProductPictureSize, storeLocation: store.Url);
 
                         string description = product.FullDescription;
                         var currency = GetUsedCurrency();
@@ -186,22 +192,27 @@ namespace Nop.Plugin.Feed.Become
                         {
                             description = product.ShortDescription;
                         }
+
                         if (String.IsNullOrEmpty(description))
                         {
                             description = product.Name;
                         }
 
                         var productCategories = _categoryService.GetProductCategoriesByProductId(product.Id);
+
                         if (productCategories.Count > 0)
                         {
                             var firstCategory = productCategories[0].Category;
+
                             if (firstCategory != null)
                             {
                                 var sb = new StringBuilder();
+
                                 foreach (var cat in GetCategoryBreadCrumb(firstCategory))
                                 {
                                     sb.AppendFormat("{0}>", cat.Name);
                                 }
+
                                 sb.Length -= 1;
                                 category = sb.ToString();
                             }
@@ -245,6 +256,7 @@ namespace Nop.Plugin.Feed.Become
             {
                 ProductPictureSize = 125
             };
+
             _settingService.SaveSetting(settings);
 
             //locales
