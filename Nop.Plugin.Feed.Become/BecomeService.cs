@@ -166,15 +166,15 @@ namespace Nop.Plugin.Feed.Become
                     foreach (var product in productsToProcess)
                     {
 
-                        string sku = product.Id.ToString("000000000000");
+                        var sku = product.Id.ToString("000000000000");
                         var productManufacturers = _manufacturerService.GetProductManufacturersByProductId(product.Id, false);
-                        string manufacturerName = productManufacturers.Count > 0 ? productManufacturers[0].Manufacturer.Name : String.Empty;
-                        string manufacturerPartNumber = product.ManufacturerPartNumber;
-                        string productTitle = product.Name;
+                        var manufacturerName = productManufacturers.Count > 0 ? productManufacturers[0].Manufacturer.Name : String.Empty;
+                        var manufacturerPartNumber = product.ManufacturerPartNumber;
+                        var productTitle = product.Name;
                         //TODO add a method for getting product URL (e.g. SEOHelper.GetProductUrl)
                         var productUrl = string.Format("{0}{1}", _webHelper.GetStoreLocation(false), product.GetSeName());
 
-                        string imageUrl = string.Empty;
+                        var imageUrl = string.Empty;
                         var pictures = _pictureService.GetPicturesByProductId(product.Id, 1);
 
                         //always use HTTP when getting image URL
@@ -182,11 +182,11 @@ namespace Nop.Plugin.Feed.Become
                             ? _pictureService.GetPictureUrl(pictures[0], _becomeSettings.ProductPictureSize, storeLocation: store.Url) 
                             : _pictureService.GetDefaultPictureUrl(_becomeSettings.ProductPictureSize, storeLocation: store.Url);
 
-                        string description = product.FullDescription;
+                        var description = product.FullDescription;
                         var currency = GetUsedCurrency();
-                        string price = _currencyService.ConvertFromPrimaryStoreCurrency(product.Price, currency).ToString(new CultureInfo("en-US", false).NumberFormat);
-                        string stockStatus = product.StockQuantity > 0 ? "In Stock" : "Out of Stock";
-                        string category = "no category";
+                        var price = _currencyService.ConvertFromPrimaryStoreCurrency(product.Price, currency).ToString(new CultureInfo("en-US", false).NumberFormat);
+                        var stockStatus = product.StockQuantity > 0 ? "In Stock" : "Out of Stock";
+                        var category = "no category";
 
                         if (String.IsNullOrEmpty(description))
                         {

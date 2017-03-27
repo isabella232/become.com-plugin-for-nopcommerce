@@ -71,7 +71,7 @@ namespace Nop.Plugin.Feed.Become.Controllers
                     });
             }
 
-            return View("~/Plugins/Feed.Become/Views/FeedBecome/Configure.cshtml", model);
+            return View("~/Plugins/Feed.Become/Views/Configure.cshtml", model);
         }
 
         [HttpPost]
@@ -102,7 +102,7 @@ namespace Nop.Plugin.Feed.Become.Controllers
                 });
             }
 
-            return View("~/Plugins/Feed.Become/Views/FeedBecome/Configure.cshtml", model);
+            return View("~/Plugins/Feed.Become/Views/Configure.cshtml", model);
         }
 
         [ChildActionOnly]
@@ -117,8 +117,8 @@ namespace Nop.Plugin.Feed.Become.Controllers
 
             try
             {
-                string fileName = string.Format("become_{0}_{1}.csv", DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), CommonHelper.GenerateRandomDigitCode(4));
-                string filePath = Path.Combine(Request.PhysicalApplicationPath, "content\\files\\exportimport", fileName);
+                var fileName = string.Format("become_{0}_{1}.csv", DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), CommonHelper.GenerateRandomDigitCode(4));
+                var filePath = Path.Combine(Request.PhysicalApplicationPath, "content\\files\\exportimport", fileName);
 
                 using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
                 {
@@ -136,8 +136,8 @@ namespace Nop.Plugin.Feed.Become.Controllers
                     plugin.GenerateFeed(fs, _storeContext.CurrentStore);
                 }
 
-                string clickhereStr = string.Format("<a href=\"{0}content/files/exportimport/{1}\" target=\"_blank\">{2}</a>", _webHelper.GetStoreLocation(false), fileName, _localizationService.GetResource("Plugins.Feed.Become.ClickHere"));
-                string result = string.Format(_localizationService.GetResource("Plugins.Feed.Become.SuccessResult"), clickhereStr);
+                var clickhereStr = string.Format("<a href=\"{0}content/files/exportimport/{1}\" target=\"_blank\">{2}</a>", _webHelper.GetStoreLocation(false), fileName, _localizationService.GetResource("Plugins.Feed.Become.ClickHere"));
+                var result = string.Format(_localizationService.GetResource("Plugins.Feed.Become.SuccessResult"), clickhereStr);
 
                 model.GenerateFeedResult = result;
             }
@@ -156,7 +156,7 @@ namespace Nop.Plugin.Feed.Become.Controllers
                 });
             }
 
-            return View("~/Plugins/Feed.Become/Views/FeedBecome/Configure.cshtml", model);
+            return View("~/Plugins/Feed.Become/Views/Configure.cshtml", model);
         }
 
         #endregion
