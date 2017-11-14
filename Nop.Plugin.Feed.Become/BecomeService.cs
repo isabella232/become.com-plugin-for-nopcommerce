@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Web.Routing;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Directory;
@@ -74,7 +73,7 @@ namespace Nop.Plugin.Feed.Become
 
         private static string RemoveSpecChars(string s)
         {
-            if (String.IsNullOrEmpty(s))
+            if (string.IsNullOrEmpty(s))
                 return s;
 
             s = s.Replace(';', ',').Replace('\r', ' ').Replace('\n', ' ');
@@ -85,7 +84,7 @@ namespace Nop.Plugin.Feed.Become
         private IList<Category> GetCategoryBreadCrumb(Category category)
         {
             if (category == null)
-                throw new ArgumentNullException("category");
+                throw new ArgumentNullException(nameof(category));
 
             var breadCrumb = new List<Category>();
 
@@ -107,31 +106,24 @@ namespace Nop.Plugin.Feed.Become
 
         #region Methods
 
-        /// <summary>
-        /// Gets a route for provider configuration
-        /// </summary>
-        /// <param name="actionName">Action name</param>
-        /// <param name="controllerName">Controller name</param>
-        /// <param name="routeValues">Route values</param>
-        public void GetConfigurationRoute(out string actionName, out string controllerName, out RouteValueDictionary routeValues)
+        public override string GetConfigurationPageUrl()
         {
-            actionName = "Configure";
-            controllerName = "FeedBecome";
-            routeValues = new RouteValueDictionary() { { "Namespaces", "Nop.Plugin.Feed.Become.Controllers" }, { "area", null } };
+            return $"{_webHelper.GetStoreLocation()}Admin/FeedBecome/Configure";
         }
 
         /// <summary>
         /// Generate a feed
         /// </summary>
         /// <param name="stream">Stream</param>
+        /// <param name="store">Store</param>
         /// <returns>Generated feed</returns>
         public void GenerateFeed(Stream stream, Store store)
         {
             if (stream == null)
-                throw new ArgumentNullException("stream");
+                throw new ArgumentNullException(nameof(stream));
 
             if (store == null)
-                throw new ArgumentNullException("store");
+                throw new ArgumentNullException(nameof(store));
 
             using (var writer = new StreamWriter(stream))
             {
@@ -167,18 +159,17 @@ namespace Nop.Plugin.Feed.Become
                     {
 
                         var sku = product.Id.ToString("000000000000");
-                        var productManufacturers = _manufacturerService.GetProductManufacturersByProductId(product.Id, false);
-                        var manufacturerName = productManufacturers.Count > 0 ? productManufacturers[0].Manufacturer.Name : String.Empty;
+                        var productManufacturers = _manufacturerService.GetProductManufacturersByProductId(product.Id);
+                        var manufacturerName = productManufacturers.Count > 0 ? productManufacturers[0].Manufacturer.Name : string.Empty;
                         var manufacturerPartNumber = product.ManufacturerPartNumber;
                         var productTitle = product.Name;
                         //TODO add a method for getting product URL (e.g. SEOHelper.GetProductUrl)
-                        var productUrl = string.Format("{0}{1}", _webHelper.GetStoreLocation(false), product.GetSeName());
+                        var productUrl = $"{_webHelper.GetStoreLocation(false)}{product.GetSeName()}";
 
-                        var imageUrl = string.Empty;
                         var pictures = _pictureService.GetPicturesByProductId(product.Id, 1);
 
                         //always use HTTP when getting image URL
-                        imageUrl = pictures.Count > 0 
+                        var imageUrl = pictures.Count > 0 
                             ? _pictureService.GetPictureUrl(pictures[0], _becomeSettings.ProductPictureSize, storeLocation: store.Url) 
                             : _pictureService.GetDefaultPictureUrl(_becomeSettings.ProductPictureSize, storeLocation: store.Url);
 
@@ -188,12 +179,12 @@ namespace Nop.Plugin.Feed.Become
                         var stockStatus = product.StockQuantity > 0 ? "In Stock" : "Out of Stock";
                         var category = "no category";
 
-                        if (String.IsNullOrEmpty(description))
+                        if (string.IsNullOrEmpty(description))
                         {
                             description = product.ShortDescription;
                         }
 
-                        if (String.IsNullOrEmpty(description))
+                        if (string.IsNullOrEmpty(description))
                         {
                             description = product.Name;
                         }

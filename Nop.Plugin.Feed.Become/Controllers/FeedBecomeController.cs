@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Core.Plugins;
 using Nop.Plugin.Feed.Become.Models;
@@ -8,11 +10,15 @@ using Nop.Services.Configuration;
 using Nop.Services.Directory;
 using Nop.Services.Localization;
 using Nop.Services.Logging;
+using Nop.Services.Security;
+using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
+using Nop.Web.Framework.Mvc.Filters;
 
 namespace Nop.Plugin.Feed.Become.Controllers
 {
-    [AdminAuthorize]
+    [AuthorizeAdmin]
+    [Area(AreaNames.Admin)]
     public class FeedBecomeController : BasePluginController
     {
         #region Fields
@@ -25,6 +31,8 @@ namespace Nop.Plugin.Feed.Become.Controllers
         private readonly ISettingService _settingService;
         private readonly IStoreContext _storeContext;
         private readonly BecomeSettings _becomeSettings;
+        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IPermissionService _permissionService;
 
         #endregion
 
@@ -37,7 +45,9 @@ namespace Nop.Plugin.Feed.Become.Controllers
             IWebHelper webHelper,
             ISettingService settingService,
             IStoreContext storeContext,
-            BecomeSettings becomeSettings)
+            BecomeSettings becomeSettings,
+            IHostingEnvironment hostingEnvironment,
+            IPermissionService permissionService)
         {
             this._currencyService = currencyService;
             this._localizationService = localizationService;
@@ -47,22 +57,26 @@ namespace Nop.Plugin.Feed.Become.Controllers
             this._settingService = settingService;
             this._storeContext = storeContext;
             this._becomeSettings = becomeSettings;
+            this._hostingEnvironment = hostingEnvironment;
+            this._permissionService = permissionService;
         }
 
         #endregion
 
         #region Methods
 
-        [ChildActionOnly]
-        public ActionResult Configure()
+        public IActionResult Configure()
         {
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+
             var model = new FeedBecomeModel
             {
                 ProductPictureSize = _becomeSettings.ProductPictureSize,
                 CurrencyId = _becomeSettings.CurrencyId
             };
 
-            foreach (var c in _currencyService.GetAllCurrencies(false))
+            foreach (var c in _currencyService.GetAllCurrencies())
             {
                 model.AvailableCurrencies.Add(new SelectListItem()
                     {
@@ -75,10 +89,12 @@ namespace Nop.Plugin.Feed.Become.Controllers
         }
 
         [HttpPost]
-        [ChildActionOnly]
         [FormValueRequired("save")]
-        public ActionResult Configure(FeedBecomeModel model)
+        public IActionResult Configure(FeedBecomeModel model)
         {
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+
             if (!ModelState.IsValid)
             {
                 return Configure();
@@ -93,9 +109,9 @@ namespace Nop.Plugin.Feed.Become.Controllers
             SuccessNotification(_localizationService.GetResource("Admin.Plugins.Saved"));
 
             //redisplay the form
-            foreach (var c in _currencyService.GetAllCurrencies(false))
+            foreach (var c in _currencyService.GetAllCurrencies())
             {
-                model.AvailableCurrencies.Add(new SelectListItem()
+                model.AvailableCurrencies.Add(new SelectListItem
                 {
                     Text = c.Name,
                     Value = c.Id.ToString()
@@ -105,10 +121,9 @@ namespace Nop.Plugin.Feed.Become.Controllers
             return View("~/Plugins/Feed.Become/Views/Configure.cshtml", model);
         }
 
-        [ChildActionOnly]
         [HttpPost, ActionName("Configure")]
         [FormValueRequired("generate")]
-        public ActionResult GenerateFeed(FeedBecomeModel model)
+        public IActionResult GenerateFeed(FeedBecomeModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -117,8 +132,8 @@ namespace Nop.Plugin.Feed.Become.Controllers
 
             try
             {
-                var fileName = string.Format("become_{0}_{1}.csv", DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), CommonHelper.GenerateRandomDigitCode(4));
-                var filePath = Path.Combine(Request.PhysicalApplicationPath, "content\\files\\exportimport", fileName);
+                var fileName = $"become_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_{CommonHelper.GenerateRandomDigitCode(4)}.csv";
+                var filePath = Path.Combine(_hostingEnvironment.WebRootPath, "files\\exportimport", fileName);
 
                 using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
                 {
@@ -136,7 +151,7 @@ namespace Nop.Plugin.Feed.Become.Controllers
                     plugin.GenerateFeed(fs, _storeContext.CurrentStore);
                 }
 
-                var clickhereStr = string.Format("<a href=\"{0}content/files/exportimport/{1}\" target=\"_blank\">{2}</a>", _webHelper.GetStoreLocation(false), fileName, _localizationService.GetResource("Plugins.Feed.Become.ClickHere"));
+                var clickhereStr = $"<a href=\"{_webHelper.GetStoreLocation(false)}wwwroot/files/exportimport/{fileName}\" target=\"_blank\">{_localizationService.GetResource("Plugins.Feed.Become.ClickHere")}</a>";
                 var result = string.Format(_localizationService.GetResource("Plugins.Feed.Become.SuccessResult"), clickhereStr);
 
                 model.GenerateFeedResult = result;

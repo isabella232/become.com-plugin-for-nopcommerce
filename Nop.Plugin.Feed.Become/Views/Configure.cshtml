@@ -1,11 +1,11 @@
 ﻿@{
-    Layout = "";
+    Layout = "_ConfigurePlugin";
 }
-@model Nop.Plugin.Feed.Become.Models.FeedBecomeModel
-@using Nop.Web.Framework;
-@using (Html.BeginForm())
-{
-    @Html.AntiForgeryToken()
+
+@model FeedBecomeModel
+@using Nop.Plugin.Feed.Become.Models
+
+<form asp-controller="FeedBecome" asp-action="Configure" method="post">
     <div class="panel-group">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -14,29 +14,29 @@
                 </p>
                 <div class="form-group">
                     <div class="col-md-3">
-                        @Html.NopLabelFor(model => model.ProductPictureSize)
+                        <nop-label asp-for="ProductPictureSize" />
                     </div>
                     <div class="col-md-9">
-                        @Html.NopEditorFor(model => model.ProductPictureSize)
-                        @Html.ValidationMessageFor(model => model.ProductPictureSize)
+                        <nop-editor asp-for="ProductPictureSize" />
+                        <span asp-validation-for="ProductPictureSize"></span>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-md-3">
-                        @Html.NopLabelFor(model => model.CurrencyId)
+                        <nop-label asp-for="CurrencyId" />
                     </div>
                     <div class="col-md-9">
-                        @Html.NopDropDownListFor(model => model.CurrencyId, Model.AvailableCurrencies)
-                        @Html.ValidationMessageFor(model => model.CurrencyId)
+                        <nop-editor asp-for="CurrencyId" />
+                        <span asp-validation-for="CurrencyId"></span>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-md-9 col-md-offset-3">
-                        <input type="submit" name="save" class="btn bg-blue" value="@T("Admin.Common.Save")"/>
-                        <input type="submit" name="generate" class="btn bg-green" value="@T("Plugins.Feed.Become.Generate")"/>
+                        <input type="submit" name="save" class="btn bg-blue" value="@T("Admin.Common.Save")" />
+                        <input type="submit" name="generate" class="btn bg-green" value="@T("Plugins.Feed.Become.Generate")" />
                     </div>
                 </div>
-                @if (!String.IsNullOrEmpty(Model.GenerateFeedResult))
+                @if (!string.IsNullOrEmpty(Model.GenerateFeedResult))
                 {
                     <div class="form-group">
                         <div class="col-md-offset-3 col-md-9">
@@ -46,5 +46,5 @@
                 }
             </div>
         </div>
-    </div>  
-}
+    </div>
+</form>
