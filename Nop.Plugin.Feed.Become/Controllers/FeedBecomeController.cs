@@ -4,12 +4,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
-using Nop.Core.Plugins;
 using Nop.Plugin.Feed.Become.Models;
 using Nop.Services.Configuration;
 using Nop.Services.Directory;
 using Nop.Services.Localization;
 using Nop.Services.Logging;
+using Nop.Services.Plugins;
 using Nop.Services.Security;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
@@ -23,42 +23,43 @@ namespace Nop.Plugin.Feed.Become.Controllers
     {
         #region Fields
 
+        private readonly BecomeSettings _becomeSettings;
         private readonly ICurrencyService _currencyService;
+        private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ILocalizationService _localizationService;
-        private readonly IPluginFinder _pluginFinder;
         private readonly ILogger _logger;
-        private readonly IWebHelper _webHelper;
+        private readonly IPermissionService _permissionService;
+        private readonly IPluginFinder _pluginFinder;
         private readonly ISettingService _settingService;
         private readonly IStoreContext _storeContext;
-        private readonly BecomeSettings _becomeSettings;
-        private readonly IHostingEnvironment _hostingEnvironment;
-        private readonly IPermissionService _permissionService;
+        private readonly IWebHelper _webHelper;
+
 
         #endregion
 
         #region Ctor
 
-        public FeedBecomeController(ICurrencyService currencyService,
-            ILocalizationService localizationService, 
-            IPluginFinder pluginFinder, 
-            ILogger logger, 
-            IWebHelper webHelper,
+        public FeedBecomeController(BecomeSettings becomeSettings,
+            ICurrencyService currencyService,
+            IHostingEnvironment hostingEnvironment,
+            ILocalizationService localizationService,
+            ILogger logger,
+            IPermissionService permissionService,
+            IPluginFinder pluginFinder,
             ISettingService settingService,
             IStoreContext storeContext,
-            BecomeSettings becomeSettings,
-            IHostingEnvironment hostingEnvironment,
-            IPermissionService permissionService)
+            IWebHelper webHelper)
         {
+            this._becomeSettings = becomeSettings;
             this._currencyService = currencyService;
+            this._hostingEnvironment = hostingEnvironment;
             this._localizationService = localizationService;
-            this._pluginFinder = pluginFinder;
             this._logger = logger;
-            this._webHelper = webHelper;
+            this._permissionService = permissionService;
+            this._pluginFinder = pluginFinder;
             this._settingService = settingService;
             this._storeContext = storeContext;
-            this._becomeSettings = becomeSettings;
-            this._hostingEnvironment = hostingEnvironment;
-            this._permissionService = permissionService;
+            this._webHelper = webHelper;
         }
 
         #endregion
@@ -151,7 +152,7 @@ namespace Nop.Plugin.Feed.Become.Controllers
                     plugin.GenerateFeed(fs, _storeContext.CurrentStore);
                 }
 
-                var clickhereStr = $"<a href=\"{_webHelper.GetStoreLocation(false)}wwwroot/files/exportimport/{fileName}\" target=\"_blank\">{_localizationService.GetResource("Plugins.Feed.Become.ClickHere")}</a>";
+                var clickhereStr = $"<a href=\"{_webHelper.GetStoreLocation(false)}/files/exportimport/{fileName}\" target=\"_blank\">{_localizationService.GetResource("Plugins.Feed.Become.ClickHere")}</a>";
                 var result = string.Format(_localizationService.GetResource("Plugins.Feed.Become.SuccessResult"), clickhereStr);
 
                 model.GenerateFeedResult = result;

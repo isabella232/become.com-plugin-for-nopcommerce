@@ -23,38 +23,45 @@ namespace Nop.Plugin.Feed.Become
     {
         #region Fields
 
-        private readonly IProductService _productService;
-        private readonly ICategoryService _categoryService;
-        private readonly IManufacturerService _manufacturerService;
-        private readonly IPictureService _pictureService;
-        private readonly ICurrencyService _currencyService;
-        private readonly ISettingService _settingService;
-        private readonly IWebHelper _webHelper;
         private readonly BecomeSettings _becomeSettings;
         private readonly CurrencySettings _currencySettings;
+        private readonly ICategoryService _categoryService;
+        private readonly ICurrencyService _currencyService;
+        private readonly ILocalizationService _localizationService;
+        private readonly IManufacturerService _manufacturerService;
+        private readonly IPictureService _pictureService;
+        private readonly IProductService _productService;
+        private readonly ISettingService _settingService;
+        private readonly IUrlRecordService _urlRecordService;
+        private readonly IWebHelper _webHelper;
+
 
         #endregion
 
         #region Ctor
-        public BecomeService(IProductService productService,
-            ICategoryService categoryService, 
-            IManufacturerService manufacturerService, 
+        public BecomeService(BecomeSettings becomeSettings,
+            CurrencySettings currencySettings,
+            ICategoryService categoryService,
+            ICurrencyService currencyService,
+            ILocalizationService localizationService,
+            IManufacturerService manufacturerService,
+            IProductService productService,
             IPictureService pictureService,
-            ICurrencyService currencyService, 
-            IWebHelper webHelper,
             ISettingService settingService,
-            BecomeSettings becomeSettings, 
-            CurrencySettings currencySettings)
+            IUrlRecordService urlRecordService,
+            IWebHelper webHelper)
         {
-            this._productService = productService;
-            this._categoryService = categoryService;
-            this._manufacturerService = manufacturerService;
-            this._pictureService = pictureService;
-            this._currencyService = currencyService;
-            this._webHelper = webHelper;
-            this._settingService = settingService;
             this._becomeSettings = becomeSettings;
             this._currencySettings = currencySettings;
+            this._categoryService = categoryService;
+            this._currencyService = currencyService;
+            this._localizationService = localizationService;
+            this._manufacturerService = manufacturerService;
+            this._productService = productService;
+            this._pictureService = pictureService;
+            this._settingService = settingService;
+            this._urlRecordService = urlRecordService;
+            this._webHelper = webHelper;
         }
 
         #endregion
@@ -164,7 +171,7 @@ namespace Nop.Plugin.Feed.Become
                         var manufacturerPartNumber = product.ManufacturerPartNumber;
                         var productTitle = product.Name;
                         //TODO add a method for getting product URL (e.g. SEOHelper.GetProductUrl)
-                        var productUrl = $"{_webHelper.GetStoreLocation(false)}{product.GetSeName()}";
+                        var productUrl = $"{_webHelper.GetStoreLocation(false)}{_urlRecordService.GetSeName(product)}";
 
                         var pictures = _pictureService.GetPicturesByProductId(product.Id, 1);
 
@@ -251,30 +258,30 @@ namespace Nop.Plugin.Feed.Become
             _settingService.SaveSetting(settings);
 
             //locales
-            this.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.ClickHere", "Click here");
-            this.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.Currency", "Currency");
-            this.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.Currency.Hint", "Select the default currency that will be used to generate the feed.");
-            this.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.Generate", "Generate feed");
-            this.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.ProductPictureSize", "Product thumbnail image size");
-            this.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.ProductPictureSize.Hint", "The default size (pixels) for product thumbnail images.");
-            this.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.SuccessResult", "Become.com feed has been successfully generated. {0} to see generated feed");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.ClickHere", "Click here");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.Currency", "Currency");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.Currency.Hint", "Select the default currency that will be used to generate the feed.");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.Generate", "Generate feed");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.ProductPictureSize", "Product thumbnail image size");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.ProductPictureSize.Hint", "The default size (pixels) for product thumbnail images.");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Feed.Become.SuccessResult", "Become.com feed has been successfully generated. {0} to see generated feed");
 
             base.Install();
         }
-        
+
         public override void Uninstall()
         {
             //settings
             _settingService.DeleteSetting<BecomeSettings>();
 
             //locales
-            this.DeletePluginLocaleResource("Plugins.Feed.Become.ClickHere");
-            this.DeletePluginLocaleResource("Plugins.Feed.Become.Currency");
-            this.DeletePluginLocaleResource("Plugins.Feed.Become.Currency.Hint");
-            this.DeletePluginLocaleResource("Plugins.Feed.Become.Generate");
-            this.DeletePluginLocaleResource("Plugins.Feed.Become.ProductPictureSize");
-            this.DeletePluginLocaleResource("Plugins.Feed.Become.ProductPictureSize.Hint");
-            this.DeletePluginLocaleResource("Plugins.Feed.Become.SuccessResult");
+            _localizationService.DeletePluginLocaleResource("Plugins.Feed.Become.ClickHere");
+            _localizationService.DeletePluginLocaleResource("Plugins.Feed.Become.Currency");
+            _localizationService.DeletePluginLocaleResource("Plugins.Feed.Become.Currency.Hint");
+            _localizationService.DeletePluginLocaleResource("Plugins.Feed.Become.Generate");
+            _localizationService.DeletePluginLocaleResource("Plugins.Feed.Become.ProductPictureSize");
+            _localizationService.DeletePluginLocaleResource("Plugins.Feed.Become.ProductPictureSize.Hint");
+            _localizationService.DeletePluginLocaleResource("Plugins.Feed.Become.SuccessResult");
 
             base.Uninstall();
         }
